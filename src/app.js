@@ -39,7 +39,10 @@ app.get('/user', userAuth, (req, res, next) => {
     // res.send('this is from the second route handler')
 })
 
-app.use('/', (req, res) => {
+app.use('/', (err, req, res, next) => {
+    if (err) {
+        res.status(500).send('there is some error coming')
+    }
     res.send('this is the data from the main page')
 })
 app.listen(3333, () => {
