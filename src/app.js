@@ -2,6 +2,8 @@ const express = require('express')
 const connectDb = require("../config/Database")
 const {adminAuth, userAuth} = require('../middlewares/auth')
 const User = require('../models/user')
+const {validateSignUp} = require('../utils/validate')
+const bcrypt = require('bcrypt')
 
 const app = express();
 
@@ -9,14 +11,27 @@ app.use(express.json())
 
 
 app.post('/signup', async (req, res) => {
-    const data = req.body
-    const user = new User(data)
     try{
+    // validate the data coming
+    validateSignUp(req)
+
+    const {firstName, lastName, emailId, password} = req.body
+    // encrypt the password
+    console.log(password)
+    const hashedPassword = await bcrypt.hash(password, 10)
+    console.log(hashedPassword)
+    const data = req.body
+    const user = new User({
+        firstName,
+        lastName,
+        emailId,
+        password: hashedPassword
+    })
         await user.save();
         res.send('Data added successfully to the database')
     }
     catch(err){
-        res.status(400).send('error saving data')
+        res.status(400).send('ERROR : '+ err)
     }
 
 })
