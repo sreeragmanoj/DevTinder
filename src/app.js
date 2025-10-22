@@ -46,11 +46,25 @@ app.delete('/user', async (req, res) => {
     }
 })
 
-app.patch("/user", async (req, res) =>{
+app.patch("/user/:emailId", async (req, res) =>{
     const UpdatedUserData = req.body
+    const userMail = req.params?.emailId
+    console.log(userMail)
     try{
         console.log(UpdatedUserData)
-        const userData = await User.findOneAndUpdate({emailId : UpdatedUserData.emailId}, UpdatedUserData, {returnDocument: "after", runValidators: true})
+        const ALLOWEDUPDATES = ["photoURL", "about", "gender", "age", "skills"]
+        const isUpdateAllowed = Object.keys(UpdatedUserData).every((k) =>
+            ALLOWEDUPDATES.includes(k)
+        )
+        console.log(isUpdateAllowed)
+        if (!isUpdateAllowed){
+            throw Error("Update not allowed for some fields")
+        }
+        if (UpdatedUserData.skills.length > 10){
+            throw Error("skills should be in limit of 10")
+        }
+        console.log(UpdatedUserData)
+        const userData = await User.findOneAndUpdate({emailId : userMail}, UpdatedUserData, {returnDocument: "after", runValidators: true})
         res.send("The user is updated successfully !!!!", userData)
     } catch (err) {
         res.status(400).send("some error occurred at updating the user")
