@@ -1,7 +1,7 @@
 // require("mongodb")
 const mongoose = require("mongoose")
 
-const URl = "mongodb+srv://DevTinder:sree1234@sreerag.ig35pxd.mongodb.net/DevTinder"
+const URl = "mongodb://127.0.0.1:27017/DevTinder"
 
 const connectDB = async () => {
     await mongoose.connect(URl)

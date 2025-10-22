@@ -5,21 +5,68 @@ const User = require('../models/user')
 
 const app = express();
 
+app.use(express.json())
+
 
 app.post('/signup', async (req, res) => {
-    const userData = {
-        firstName: 'Sreerag',
-        lastName: 'manoj',
-        age: 25,
-        gender: 'Male'
-    }
-    const user = new User(userData)
+    const data = req.body
+    const user = new User(data)
     try{
         await user.save();
         res.send('Data added successfully to the database')
     }
     catch(err){
         res.status(400).send('error saving data')
+    }
+
+})
+
+app.get('/user', async (req, res) => {
+    const emailId = req.body.emailId
+    try {
+        const users = await User.find({emailId : emailId})
+        if (users.length === 0){
+            res.status(400).send('User not found, Try some other email id')
+        }else{
+            res.send(users)
+        }
+    } catch ( err ) {
+        res.status(400).send('user not found there is some error')
+    }
+
+})
+
+app.delete('/user', async (req, res) => {
+    const emailId = req.body.emailId
+    try{
+        const deletedUser = await User.findOneAndDelete({emailId: emailId})
+        res.send("user updated successfully ", deletedUser)
+    } catch (err) {
+        res.status(400).send("Some error occurred in the delete user api")
+    }
+})
+
+app.patch("/user", async (req, res) =>{
+    const UpdatedUserData = req.body
+    try{
+        console.log(UpdatedUserData)
+        const userData = await User.findOneAndUpdate({emailId : UpdatedUserData.emailId}, UpdatedUserData, {returnDocument: "after", runValidators: true})
+        res.send("The user is updated successfully !!!!", userData)
+    } catch (err) {
+        res.status(400).send("some error occurred at updating the user")
+    }
+})
+
+app.get('/feed', async (req, res) => {
+    try{
+        const users =await User.find()
+        if (users.length === 0 ){
+            res.status(400).send("No user found")
+        } else {
+            res.send(users)
+        }
+    } catch (err) {
+        res.status(400).send("Some error occurred at fetching data")
     }
 
 })
@@ -32,12 +79,9 @@ connectDb()
             console.log('Server is up and running fine')
         })
     })
-    
-    
-    app.listen(3333, () => {
-        console.log('the server is up and running fine')
-    })
-    
+    // app.listen(3333, () => {
+    //     console.log('Error at running server')
+    // })
 
 
 
