@@ -6,139 +6,19 @@ const {validateSignUp, validateLogin} = require('../utils/validate')
 const bcrypt = require('bcrypt')
 const cookieParser = require('cookie-parser')
 const jwt = require('jsonwebtoken')
+const authRouter = require('../router/auth')
+const profileRouter = require('../router/profile')
+// const authRouter = require('../router/auth')
 
 const app = express();
 
 app.use(express.json())
 app.use(cookieParser())
 
-
-app.post('/signup', async (req, res) => {
-    try{
-    // validate the data coming
-    validateSignUp(req)
-
-    const {firstName, lastName, emailId, password} = req.body
-    // encrypt the password
-    console.log(password)
-    const hashedPassword = await bcrypt.hash(password, 10)
-    console.log(hashedPassword)
-    const data = req.body
-    const user = new User({
-        firstName,
-        lastName,
-        emailId,
-        password: hashedPassword
-    })
-        await user.save();
-        res.send('Data added successfully to the database')
-    }
-    catch(err){
-        res.status(400).send('ERROR : '+ err)
-    }
-
-})
-
-app.post('/login', async (req, res) => {
-    const {emailId, password} = req.body
-    try{
-        console.log(req.body)
-        console.log(emailId)
-        const user = await User.findOne({emailId : emailId})
-        console.log(user.password)
-        if (!user) {
-            throw Error('invalid credentials')
-        }
-        const passwordCheck = await bcrypt.compare(password, user.password)
-        if (passwordCheck){
-            const token = jwt.sign({_id: user._id}, 'kozhikode', {expiresIn: '1d'})
-            res.cookie('token', token, {expires: new Date(Date.now() + 8 * 3600000)})
-            res.send('logged in successfully')
-        } else {
-            throw Error('invalid credentials')
-        }
-
-    } catch (err){
-        res.status(400).send("Error : "+err)
-    }
+app.use('/', authRouter)
+app.use('/', profileRouter)
 
 
-})
-
-app.get('/profile', userAuth, async (req, res) => {
-    try{
-        console.log(req.user)
-        res.send(req.user)
-        
-        } catch (err) {
-            res.send('ERROR :'+ err.message)
-        }
-
-})
-
-app.get('/user', async (req, res) => {
-    const emailId = req.body.emailId
-    try {
-        const users = await User.find({emailId : emailId})
-        if (users.length === 0){
-            res.status(400).send('User not found, Try some other email id')
-        }else{
-            res.send(users)
-        }
-    } catch ( err ) {
-        res.status(400).send('user not found there is some error')
-    }
-
-})
-
-app.delete('/user', async (req, res) => {
-    const emailId = req.body.emailId
-    try{
-        const deletedUser = await User.findOneAndDelete({emailId: emailId})
-        res.send("user updated successfully ", deletedUser)
-    } catch (err) {
-        res.status(400).send("Some error occurred in the delete user api")
-    }
-})
-
-app.patch("/user/:emailId", async (req, res) =>{
-    const UpdatedUserData = req.body
-    const userMail = req.params?.emailId
-    console.log(userMail)
-    try{
-        console.log(UpdatedUserData)
-        const ALLOWEDUPDATES = ["photoURL", "about", "gender", "age", "skills"]
-        const isUpdateAllowed = Object.keys(UpdatedUserData).every((k) =>
-            ALLOWEDUPDATES.includes(k)
-        )
-        console.log(isUpdateAllowed)
-        if (!isUpdateAllowed){
-            throw Error("Update not allowed for some fields")
-        }
-        if (UpdatedUserData.skills.length > 10){
-            throw Error("skills should be in limit of 10")
-        }
-        console.log(UpdatedUserData)
-        const userData = await User.findOneAndUpdate({emailId : userMail}, UpdatedUserData, {returnDocument: "after", runValidators: true})
-        res.send("The user is updated successfully !!!!", userData)
-    } catch (err) {
-        res.status(400).send("some error occurred at updating the user")
-    }
-})
-
-app.get('/feed', async (req, res) => {
-    try{
-        const users =await User.find()
-        if (users.length === 0 ){
-            res.status(400).send("No user found")
-        } else {
-            res.send(users)
-        }
-    } catch (err) {
-        res.status(400).send("Some error occurred at fetching data")
-    }
-
-})
 
 
 connectDb()
@@ -148,9 +28,6 @@ connectDb()
             console.log('Server is up and running fine')
         })
     })
-    // app.listen(3333, () => {
-    //     console.log('Error at running server')
-    // })
 
 
 
@@ -160,6 +37,131 @@ connectDb()
 
 
 
+// app.post('/signup', async (req, res) => {
+//     try{
+//     // validate the data coming
+//     validateSignUp(req)
+
+//     const {firstName, lastName, emailId, password} = req.body
+//     // encrypt the password
+//     console.log(password)
+//     const hashedPassword = await bcrypt.hash(password, 10)
+//     console.log(hashedPassword)
+//     const data = req.body
+//     const user = new User({
+//         firstName,
+//         lastName,
+//         emailId,
+//         password: hashedPassword
+//     })
+//         await user.save();
+//         res.send('Data added successfully to the database')
+//     }
+//     catch(err){
+//         res.status(400).send('ERROR : '+ err)
+//     }
+
+// })
+
+// app.post('/login', async (req, res) => {
+//     const {emailId, password} = req.body
+//     try{
+//         console.log(req.body)
+//         console.log(emailId)
+//         const user = await User.findOne({emailId : emailId})
+//         console.log(user.password)
+//         if (!user) {
+//             throw Error('invalid credentials')
+//         }
+//         const passwordCheck = await user.validatePassword(password)
+//         if (passwordCheck){
+//             const token = await user.getJWT()
+//             res.cookie('token', token, {expires: new Date(Date.now() + 8 * 3600000)})
+//             res.send('logged in successfully')
+//         } else {
+//             throw Error('invalid credentials')
+//         }
+
+//     } catch (err){
+//         res.status(400).send("Error : "+err)
+//     }
+
+
+// })
+
+// app.get('/profile', userAuth, async (req, res) => {
+//     try{
+//         console.log(req.user)
+//         res.send(req.user)
+//         } catch (err) {
+//             res.send('ERROR :'+ err.message)
+//         }
+
+// })
+
+// app.get('/user', async (req, res) => {
+//     const emailId = req.body.emailId
+//     try {
+//         const users = await User.find({emailId : emailId})
+//         if (users.length === 0){
+//             res.status(400).send('User not found, Try some other email id')
+//         }else{
+//             res.send(users)
+//         }
+//     } catch ( err ) {
+//         res.status(400).send('user not found there is some error')
+//     }
+
+// })
+
+// app.delete('/user', async (req, res) => {
+//     const emailId = req.body.emailId
+//     try{
+//         const deletedUser = await User.findOneAndDelete({emailId: emailId})
+//         res.send("user updated successfully ", deletedUser)
+//     } catch (err) {
+//         res.status(400).send("Some error occurred in the delete user api")
+//     }
+// })
+
+// app.patch("/user/:emailId", async (req, res) =>{
+//     const UpdatedUserData = req.body
+//     const userMail = req.params?.emailId
+//     console.log(userMail)
+//     try{
+//         console.log(UpdatedUserData)
+//         const ALLOWEDUPDATES = ["photoURL", "about", "gender", "age", "skills"]
+//         const isUpdateAllowed = Object.keys(UpdatedUserData).every((k) =>
+//             ALLOWEDUPDATES.includes(k)
+//         )
+//         console.log(isUpdateAllowed)
+//         if (!isUpdateAllowed){
+//             throw Error("Update not allowed for some fields")
+//         }
+//         if (UpdatedUserData.skills.length > 10){
+//             throw Error("skills should be in limit of 10")
+//         }
+//         console.log(UpdatedUserData)
+//         const userData = await User.findOneAndUpdate({emailId : userMail}, UpdatedUserData, {returnDocument: "after", runValidators: true})
+//         res.send("The user is updated successfully !!!!", userData)
+//     } catch (err) {
+//         res.status(400).send("some error occurred at updating the user")
+//     }
+// })
+
+// app.get('/feed', async (req, res) => {
+//     try{
+//         const users =await User.find()
+//         if (users.length === 0 ){
+//             res.status(400).send("No user found")
+//         } else {
+//             res.send(users)
+//         }
+//     } catch (err) {
+//         res.status(400).send("Some error occurred at fetching data")
+//     }
+
+// })
 
 
 
