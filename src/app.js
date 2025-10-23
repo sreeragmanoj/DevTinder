@@ -2,12 +2,15 @@ const express = require('express')
 const connectDb = require("../config/Database")
 const {adminAuth, userAuth} = require('../middlewares/auth')
 const User = require('../models/user')
-const {validateSignUp} = require('../utils/validate')
+const {validateSignUp, validateLogin} = require('../utils/validate')
 const bcrypt = require('bcrypt')
+const cookieParser = require('cookie-parser')
+const jwt = require('jsonwebtoken')
 
 const app = express();
 
 app.use(express.json())
+app.use(cookieParser())
 
 
 app.post('/signup', async (req, res) => {
@@ -33,6 +36,43 @@ app.post('/signup', async (req, res) => {
     catch(err){
         res.status(400).send('ERROR : '+ err)
     }
+
+})
+
+app.post('/login', async (req, res) => {
+    const {emailId, password} = req.body
+    try{
+        console.log(req.body)
+        console.log(emailId)
+        const user = await User.findOne({emailId : emailId})
+        console.log(user.password)
+        if (!user) {
+            throw Error('invalid credentials')
+        }
+        const passwordCheck = await bcrypt.compare(password, user.password)
+        if (passwordCheck){
+            const token = jwt.sign({_id: user._id}, 'kozhikode', {expiresIn: '1d'})
+            res.cookie('token', token, {expires: new Date(Date.now() + 8 * 3600000)})
+            res.send('logged in successfully')
+        } else {
+            throw Error('invalid credentials')
+        }
+
+    } catch (err){
+        res.status(400).send("Error : "+err)
+    }
+
+
+})
+
+app.get('/profile', userAuth, async (req, res) => {
+    try{
+        console.log(req.user)
+        res.send(req.user)
+        
+        } catch (err) {
+            res.send('ERROR :'+ err.message)
+        }
 
 })
 

@@ -18,7 +18,17 @@ const validateSignUp = (req) => {
     }
 }
 
+const validateLogin = (req) => {
+    const {emailId, password} = req.body
+    if(!validator.isEmail(emailId)){
+        throw Error('invalid credentials')
+    }
+    if(!validator.isStrongPassword(password)){
+        throw Error('invalid credentials')
+    }
+}
 
 module.exports = {
-    validateSignUp
+    validateSignUp,
+    validateLogin
 }
