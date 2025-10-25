@@ -28,7 +28,28 @@ const validateLogin = (req) => {
     }
 }
 
+const validateEditProfileData = (req) => {
+    const changeableFields = ["firstName", "lastName", "photoURL", "gender", "skills", "about", "email", "age"]
+
+    const isAllowedEdit = Object.keys(req.body).every(field => changeableFields.includes(field))
+
+    return isAllowedEdit
+}
+
+const validateForgotPassword= (req) => {
+    const password = req.body.newPassword
+    if(!validator.isStrongPassword(password)){
+        throw Error('password is not valid')
+    }
+}
+
+const validateEditPassword = (req) => {
+    
+}
+
 module.exports = {
     validateSignUp,
-    validateLogin
+    validateLogin,
+    validateEditProfileData,
+    validateForgotPassword
 }

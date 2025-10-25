@@ -8,6 +8,7 @@ const cookieParser = require('cookie-parser')
 const jwt = require('jsonwebtoken')
 const authRouter = require('../router/auth')
 const profileRouter = require('../router/profile')
+const connectionRouter = require("../router/connectionRequest")
 // const authRouter = require('../router/auth')
 
 const app = express();
@@ -17,6 +18,7 @@ app.use(cookieParser())
 
 app.use('/', authRouter)
 app.use('/', profileRouter)
+app.use('/', connectionRouter)
 
 
 
