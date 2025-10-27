@@ -3,6 +3,7 @@ const { userAuth } = require('../middlewares/auth')
 const connectionRequest = require('../models/connectionRequest')
 const User = require("../models/user")
 const connectionRouter = express.Router()
+const mongoose = require('mongoose')
 
 connectionRouter.post('/request/send/:status/:toUserId', userAuth, async (req, res) => {
     try{
@@ -52,6 +53,48 @@ connectionRouter.post('/request/send/:status/:toUserId', userAuth, async (req, r
             "message" : "ERROR : "+ err
         })
     }
+
+})
+
+connectionRouter.post('/request/receive/:status/:requestId', userAuth, async (req, res) => {
+    try{
+        const {status, requestId} = req.params;
+        const loggedInUser = req.user;
+
+        const allowedStatus = ["accepted", "rejected"]
+        const isStatusAllowed = allowedStatus.includes(status)
+        if (!isStatusAllowed){
+            throw Error('Status is not allowed, it should be accepted or rejected')
+        }
+        // const debug = await connectionRequest.findById(requestId);
+        // console.log("DB record:", debug);
+
+        const user = await connectionRequest.findOne({
+            _id :  requestId,
+            toUserId: loggedInUser._id,
+            status: "interested"}
+        )
+        console.log(user)
+        console.log(requestId)
+        console.log(loggedInUser._id)
+        console.log(status)
+        if (!user){
+            throw Error('no request available')
+        }
+        user.status = status
+        const userData = await user.save();
+        user.save()
+        res.json({
+            status: 200,
+            message: "your data have been changes ",
+            user,
+        })
+        } catch (err) {
+            res.status(400).json({
+                status: 400,
+                message: 'ERROR : '+ err
+            })
+        }
 
 })
 
