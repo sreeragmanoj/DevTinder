@@ -6,6 +6,52 @@ const userRouter = express.Router()
 
 const USER_SAFE_DATA = ["firstName", "lastName", "photoURL", "age"]
 
+
+userRouter.get('/user/nearby', userAuth, async(req, res) => {
+    const loggedInUser = req.user
+    try{
+        if (!loggedInUser.location || !loggedInUser.location.coordinates?.length) {
+        return res.status(400).send("Your location is not set.");
+        }
+        const [lng, lat] = loggedInUser.location.coordinates;
+
+        const nearByUser = await User.aggregate([
+            {
+                $geoNear: {
+                    near: {
+                        type: 'Point',
+                        coordinates: [parseFloat(lng), parseFloat(lat)]
+                    },
+                    distanceField: "distanceInMeters",
+                    maxDistance: 50000,
+                    spherical:true,
+                    query: {_id: {$ne: loggedInUser._id}},
+                },
+            },
+            {
+                $project:{
+                    firstName: 1,
+                    lastName: 1,
+                    gender: 1,
+                    skills: 1,
+                    photoURL: 1,
+                    distanceInMeters: 1
+                },
+            },
+            {$limit:20}
+        ])
+        res.json({
+            status:200,
+            message: nearByUser
+        })
+    } catch(err) {
+        res.json({
+            status : 400,
+            message: 'ERROR : '+ err,
+        })
+    }
+})
+
 userRouter.get('/user/request/received', userAuth , async (req, res) =>{
     try{
         const loggedInUser = req.user

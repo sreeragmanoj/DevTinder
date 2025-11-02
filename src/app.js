@@ -1,4 +1,5 @@
 const express = require('express')
+// import {express} from express
 const connectDb = require("../config/Database")
 const {adminAuth, userAuth} = require('../middlewares/auth')
 const User = require('../models/user')
@@ -10,12 +11,21 @@ const authRouter = require('../router/auth')
 const profileRouter = require('../router/profile')
 const connectionRouter = require("../router/connectionRequest")
 const userRouter = require('../router/user')
+const cors = require('cors');
+const configurePassport = require("../config/passport");
+
+const passport = require('passport')
+// import passport from "passport";
 // const authRouter = require('../router/auth')
 
 const app = express();
 
+app.use(passport.initialize());
+configurePassport(passport);
+
 app.use(express.json())
 app.use(cookieParser())
+app.use(cors());
 
 app.use('/', authRouter)
 app.use('/', profileRouter)

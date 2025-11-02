@@ -4,6 +4,7 @@ const jwt = require('jsonwebtoken')
 const bcrypt = require('bcrypt')
 
 const userSchema = new mongoose.Schema({
+    googleId: { type: String, unique: true, sparse: true },
     firstName: {
         type: String,
         minLength: 4,
@@ -59,6 +60,17 @@ const userSchema = new mongoose.Schema({
     skills: {
         type: [String]
     },
+    location: {
+  type: {
+    type: String,
+    enum: ['Point'],
+    default: 'Point',
+  },
+  coordinates: {
+    type: [Number], // [longitude, latitude]
+  },
+},
+
     
 
 },{
@@ -79,6 +91,11 @@ userSchema.methods.validatePassword = async function(passwordInputByUser){
     return isPasswordValidated
 }
 
-const UserModel = mongoose.model("User", userSchema)
+userSchema.index({ location: '2dsphere' });
+
+
+// const UserModel = mongoose.model("User", userSchema)
+
+const UserModel = mongoose.models.User || mongoose.model("User", userSchema);
 
 module.exports = UserModel
