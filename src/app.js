@@ -15,6 +15,7 @@ const cors = require('cors');
 const configurePassport = require("../config/passport");
 
 const passport = require('passport')
+const cityRouter = require('../router/cityRouter')
 // import passport from "passport";
 // const authRouter = require('../router/auth')
 
@@ -31,6 +32,7 @@ app.use('/', authRouter)
 app.use('/', profileRouter)
 app.use('/', connectionRouter)
 app.use('/', userRouter)
+app.use('/', cityRouter)
 
 
 
